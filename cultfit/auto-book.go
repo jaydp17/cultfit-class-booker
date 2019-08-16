@@ -1,6 +1,7 @@
 package cultfit
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -37,11 +38,13 @@ func (p Provider) bookForDate(date string, classSlots []cultClass, preferences [
 	for _, pref := range preferences {
 		for _, class := range availableClassesForDay {
 			if pref.CenterID == class.CenterID && pref.Time == class.StartTime && pref.WorkoutName == class.WorkoutName {
-				_, err := p.BookClass(class)
-				if err != nil {
+				bookingResult := <-p.BookClass(class, cookie, apiKey)
+				if bookingResult.Booked {
+					// class booked, let's not go over other preferences
 					return
 				}
 				// error booking the class, let's move on to other preference
+				fmt.Println(bookingResult.Err)
 			}
 		}
 	}

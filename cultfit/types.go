@@ -7,19 +7,19 @@ type SlotPreference struct {
 }
 
 type cultDay struct {
-	Id    string `json:"id"`    // eg. "2019-08-17"
+	ID    string `json:"id"`    // eg. "2019-08-17"
 	Day   string `json:"day"`   // eg. "17"
 	Month string `json:"month"` // eg. "Aug"
 }
 
 type cultWorkout struct {
-	Id          int    `json:"id"`          // eg. 8
+	ID          int    `json:"id"`          // eg. 8
 	Name        string `json:"name"`        // eg. "Boxing",
 	DisplayText string `json:"displayText"` // eg. "Boxing"
 }
 
 type cultClass struct {
-	Id             string `json:"id"`             // eg. "1034146"
+	ID             string `json:"id"`             // eg. "1034146"
 	ProductType    string `json:"productType"`    // eg. "FITNESS"
 	Date           string `json:"date"`           // eg. "2019-08-17"
 	StartTime      string `json:"startTime"`      // eg. "06:00:00"
