@@ -6,7 +6,7 @@ import (
 )
 
 type FetchClassInCenterResult struct {
-	Data classInCenterResponse
+	Data []cultClass
 	Err  error
 }
 
@@ -38,38 +38,44 @@ func (p Provider) FetchClassesInCenter(centerID int, cookie, apiKey string) <-ch
 			return
 		}
 
-		var jsonResp classInCenterResponse
+		var jsonResp cultClassInCenterResponse
 		if err := res.ToJSON(&jsonResp); err != nil {
 			resultCh <- FetchClassInCenterResult{Err: fmt.Errorf("failed fetching classes in a center: %v", err)}
 			return
 		}
 
-		resultCh <- FetchClassInCenterResult{Data: jsonResp}
+		justClasses := make([]cultClass, 0)
+		for _, dayGroup := range jsonResp.ClassByDateList {
+			for _, timeGroup := range dayGroup.ClassByTimeList {
+				justClasses = append(justClasses, timeGroup.Classes...)
+			}
+		}
+		resultCh <- FetchClassInCenterResult{Data: justClasses}
 	}()
 	return resultCh
 }
 
-type classInCenterResponse struct {
-	Title           string                 `json:"title"`
-	Days            []cultDay              `json:"days"`
-	WorkoutFilters  []cultWorkout          `json:"workoutFilters"`
-	ClassByDateList []classesGroupedByDate `json:"classByDateList"`
+type cultClassInCenterResponse struct {
+	Title           string                     `json:"title"`
+	Days            []cultDay                  `json:"days"`
+	WorkoutFilters  []cultWorkout              `json:"workoutFilters"`
+	ClassByDateList []cultClassesGroupedByDate `json:"classByDateList"`
 }
 
-type classesGroupedByDate struct {
-	Id              string                 `json:"id"`         // eg. "2019-08-17"
-	WidgetType      string                 `json:"widgetType"` // eg. "BROWSE_CLASS_LIST"
-	ClassByTimeList []classesGroupedByTime `json:"classByTimeList"`
+type cultClassesGroupedByDate struct {
+	Id              string                     `json:"id"`         // eg. "2019-08-17"
+	WidgetType      string                     `json:"widgetType"` // eg. "BROWSE_CLASS_LIST"
+	ClassByTimeList []cultClassesGroupedByTime `json:"classByTimeList"`
 }
 
-type classesGroupedByTime struct {
+type cultClassesGroupedByTime struct {
 	Id            string      `json:"id"`           // eg. "06:00:00"
 	DisableGroup  bool        `json:"disableGroup"` // eg. false
 	Classes       []cultClass `json:"classes"`
-	NearByCenters []nearbyCenter
+	NearByCenters []cultNearbyCenter
 }
 
-type nearbyCenter struct {
+type cultNearbyCenter struct {
 	CenterID   int         `json:"centerId"`   // eg. 3
 	CenterName string      `json:"centerName"` // eg. "Cult HSR"
 	Classes    []cultClass `json:"classes"`

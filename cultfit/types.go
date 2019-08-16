@@ -1,5 +1,11 @@
 package cultfit
 
+type SlotPreference struct {
+	CenterID    int
+	Time        string // eg. "06:00:00"
+	WorkoutName string // eg. "LEARN TO SWIM"
+}
+
 type cultDay struct {
 	Id    string `json:"id"`    // eg. "2019-08-17"
 	Day   string `json:"day"`   // eg. "17"
@@ -22,5 +28,5 @@ type cultClass struct {
 	CenterID       int    `json:"centerID"`       // eg. 172
 	AvailableSeats int    `json:"availableSeats"` // eg. 2
 	WorkoutName    string `json:"workoutName"`    // eg. "LEARN TO SWIM"
-	State          string `json:"state"`          // eg. "SEAT_NOT_AVAILABLE" or "AVAILABLE"
+	State          string `json:"state"`          // eg. "SEAT_NOT_AVAILABLE" or "AVAILABLE" or "BOOKED"
 }
