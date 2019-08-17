@@ -1,13 +1,14 @@
 package main
 
 import (
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jaydp17/cultfit-class-booker/cultfit"
 )
 
 const swimmingHSRCenterID = 172
 const swimmingKoramangalaCenterID = 164
 
-func main() {
+func Handler() {
 	cookie := getCultCookie()
 	apiKey := getCultAPIKey()
 
@@ -36,4 +37,8 @@ func main() {
 
 	cultProvider := cultfit.New()
 	cultProvider.AutoBook(preferences, cookie, apiKey)
+}
+
+func main() {
+	lambda.Start(Handler)
 }
