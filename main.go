@@ -3,12 +3,15 @@ package main
 import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jaydp17/cultfit-class-booker/cultfit"
+	"github.com/jaydp17/cultfit-class-booker/logger"
 )
 
 const swimmingHSRCenterID = 172
 const swimmingKoramangalaCenterID = 164
 
 func Handler() {
+	log := logger.New()
+	log.Info("starting handler")
 	cookie := getCultCookie()
 	apiKey := getCultAPIKey()
 
@@ -37,6 +40,7 @@ func Handler() {
 
 	cultProvider := cultfit.New()
 	cultProvider.AutoBook(preferences, cookie, apiKey)
+	log.Info("done!")
 }
 
 func main() {
