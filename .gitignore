@@ -18,3 +18,9 @@
 
 # env files
 .env*
+
+# Serverless directories
+.serverless
+
+# golang output binary directory
+.bin
