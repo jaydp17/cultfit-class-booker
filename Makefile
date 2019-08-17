@@ -7,4 +7,4 @@ clean:
 	rm -rf ./.bin
 
 deploy: clean build
-	sls deploy --stage production --verbose
+	sls deploy --stage prod --verbose

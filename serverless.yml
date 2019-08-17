@@ -1,6 +1,6 @@
 service: cult-crons
-#app: your-app-name
-#tenant: your-tenant-name
+#app: cult-crons
+#org: jaydp17
 
 frameworkVersion: '>=1.28.0 <2.0.0'
 
