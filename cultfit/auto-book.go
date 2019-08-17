@@ -61,9 +61,9 @@ func (p Provider) bookForDate(date string, classSlots []cultClass, preferences [
 
 				if bookingResult.Err != nil {
 					p.logger.WithFields(logrus.Fields{
-						"date":          date,
-						"class":         class,
-						"bookingResult": bookingResult,
+						"date":         date,
+						"class":        class,
+						"bookingError": bookingResult.Err.Error(),
 					}).Error("error booking the class")
 				}
 				// error booking the class, let's move on to other preference

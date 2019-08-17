@@ -31,7 +31,7 @@ func (p Provider) BookClass(class cultClass, cookie, apiKey string) <-chan BookC
 			"referer":        "https://www.cure.fit/cult/classbooking?pageFrom=cultCLP&pageType=classbooking",
 			"appversion":     "7",
 		}
-		res, err := req.Get(p.getClassBookingURL(class.ID), headers)
+		res, err := req.Post(p.getClassBookingURL(class.ID), headers)
 		if err != nil {
 			resultCh <- BookClassResult{Err: fmt.Errorf("failed to book class: %v", err)}
 			return
