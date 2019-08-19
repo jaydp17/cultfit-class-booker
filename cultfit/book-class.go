@@ -1,6 +1,7 @@
 package cultfit
 
 import (
+	"errors"
 	"fmt"
 	"github.com/imroc/req"
 	"net/http"
@@ -38,7 +39,7 @@ func (p Provider) BookClass(class cultClass, cookie, apiKey string) <-chan BookC
 		}
 
 		if res.Response().StatusCode != http.StatusOK {
-			resultCh <- BookClassResult{Err: fmt.Errorf("failed to book class: %v", res.Response().Status)}
+			resultCh <- BookClassResult{Err: errors.New(fmt.Sprintf("failed to book class: %v", res.Response().Status))}
 			return
 		}
 
