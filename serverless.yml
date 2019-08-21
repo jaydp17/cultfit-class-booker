@@ -34,5 +34,5 @@ functions:
       - schedule:
           name: cult-class-booker-${self:provider.stage}
           description: A cron that books my cult classes (stage ${self:provider.stage})
-          rate: cron(32 16 * * ? *) # this equals to 10:02PM IST
+          rate: cron(30 16 * * ? *) # this equals to 10:01PM IST
           enabled: true
