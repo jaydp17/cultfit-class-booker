@@ -11,8 +11,11 @@ type BookClassResult struct {
 	Booked bool
 	Err    error
 }
+type ClassBooker interface {
+	BookClass(class cultClass) <-chan BookClassResult
+}
 
-func (p Provider) BookClass(class cultClass, cookie, apiKey string) <-chan BookClassResult {
+func (p Provider) BookClass(class cultClass) <-chan BookClassResult {
 	resultCh := make(chan BookClassResult)
 
 	go func() {
@@ -20,14 +23,14 @@ func (p Provider) BookClass(class cultClass, cookie, apiKey string) <-chan BookC
 		headers := req.Header{
 			"sec-fetch-mode": "cors",
 			"osname":         "browser",
-			"cookie":         cookie,
+			"cookie":         p.Cookie,
 			"pragma":         "no-cache",
 			"user-agent":     "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Mobile Safari/537.36",
 			"content-type":   "application/json",
 			"accept":         "application/json",
 			"cache-control":  "no-cache,no-cache",
 			"authority":      "www.cure.fit",
-			"apikey":         apiKey,
+			"apikey":         p.APIKey,
 			"sec-fetch-site": "same-origin",
 			"referer":        "https://www.cure.fit/cult/classbooking?pageFrom=cultCLP&pageType=classbooking",
 			"appversion":     "7",

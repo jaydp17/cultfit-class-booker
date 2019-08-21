@@ -17,6 +17,11 @@ func (p Provider) AutoBook(preferences []SlotPreference, cookie, apiKey string) 
 		dates[i] = time.Now().AddDate(0, 0, i+1).Format("2006-01-02")
 	}
 
+	classBooker := (func() {
+		return
+	})
+	{
+	}
 	for _, date := range dates {
 		if err := p.bookForDate(date, classSlots, preferences, cookie, apiKey); err != nil {
 			switch errorT := err.(type) {
@@ -36,21 +41,38 @@ func (p Provider) AutoBook(preferences []SlotPreference, cookie, apiKey string) 
 	}
 }
 
-func (p Provider) bookForDate(date string, classSlots []cultClass, preferences []SlotPreference, cookie, apiKey string) error {
-	availableClassesForDay := make([]cultClass, 0)
+func bookForDate(date string, classSlots []cultClass, preferences []SlotPreference, provider ClassBooker) (bool, []SlotPreferenceStatus, error) {
+	// filter out classes just for the requested date
+	var classesForDate []cultClass
 	for _, class := range classSlots {
-		if class.Date == date && (class.State == "AVAILABLE" || class.State == "BOOKED") {
-			availableClassesForDay = append(availableClassesForDay, class)
-			// RETURN early if class already booked
-			if class.State == "BOOKED" {
-				p.logger.WithFields(logrus.Fields{
-					"date":  date,
-					"class": class,
-				}).Info("class already booked")
-				return nil
-			}
+		if class.Date == date {
+			classesForDate = append(classesForDate, class)
 		}
 	}
+
+	isAlreadyBooked, alreadyBookedClass := anyClassBookedForDate(date, classesForDate)
+	if isAlreadyBooked {
+		p.logger.WithFields(logrus.Fields{
+			"date":               date,
+			"alreadyBookedClass": alreadyBookedClass,
+		}).Info("class already booked")
+		return false, nil, nil
+	}
+
+	//availableClassesForDay := make([]cultClass, 0)
+	//for _, class := range classSlots {
+	//	if class.Date == date && (class.State == "AVAILABLE" || class.State == "BOOKED") {
+	//		availableClassesForDay = append(availableClassesForDay, class)
+	//		// RETURN early if class already booked
+	//		if class.State == "BOOKED" {
+	//			p.logger.WithFields(logrus.Fields{
+	//				"date":  date,
+	//				"class": class,
+	//			}).Info("class already booked")
+	//			return nil
+	//		}
+	//	}
+	//}
 
 	if len(availableClassesForDay) == 0 {
 		return NoAvailableClassError{date}
@@ -59,17 +81,20 @@ func (p Provider) bookForDate(date string, classSlots []cultClass, preferences [
 	// TODO: log state of each preference
 
 	foundPreferredSlot := false
+	slotPrefeStatuses := make([]SlotPreferenceStatus, 0, len(preferences))
 	// if the execution comes here, it means we haven't booked a class for this day
 	for _, pref := range preferences {
-		for _, class := range availableClassesForDay {
+		prefStatus := SlotPreferenceStatus{SlotPreference: pref}
+		for _, class := range classesForDate {
 			if pref.CenterID == class.CenterID && pref.Time == class.StartTime && pref.WorkoutName == class.WorkoutName {
 				foundPreferredSlot = true
-				bookingResult := <-p.BookClass(class, cookie, apiKey)
+				bookingResult := <-provider.BookClass(class)
 				if bookingResult.Booked {
 					p.logger.WithFields(logrus.Fields{
 						"date":  date,
 						"class": class,
 					}).Info("successfully booked a class")
+					prefStatus.Status = "BOOKED"
 					// class booked, let's not go over other preferences
 					return nil
 				}
@@ -84,6 +109,7 @@ func (p Provider) bookForDate(date string, classSlots []cultClass, preferences [
 				// error booking the class, let's move on to other preference
 			}
 		}
+
 	}
 
 	if !foundPreferredSlot {
@@ -136,6 +162,15 @@ func (p Provider) getClassSlots(centerIDs []int, cookie, apiKey string) []cultCl
 		allAvailableClasses = append(allAvailableClasses, classes...)
 	}
 	return allAvailableClasses
+}
+
+func anyClassBookedForDate(date string, classes []cultClass) (bool, cultClass) {
+	for _, class := range classes {
+		if class.Date == date && class.State == "BOOKED" {
+			return true, class
+		}
+	}
+	return false, cultClass{}
 }
 
 func getUniqueCenterIDs(preferences []SlotPreference) []int {

@@ -6,6 +6,11 @@ type SlotPreference struct {
 	WorkoutName string // eg. "LEARN TO SWIM"
 }
 
+type SlotPreferenceStatus struct {
+	SlotPreference
+	Status string
+}
+
 type cultDay struct {
 	ID    string `json:"id"`    // eg. "2019-08-17"
 	Day   string `json:"day"`   // eg. "17"
