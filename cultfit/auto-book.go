@@ -18,37 +18,52 @@ func (p Provider) AutoBook(preferences []SlotPreference, cookie, apiKey string) 
 	}
 
 	for _, date := range dates {
-		p.bookForDate(date, classSlots, preferences, cookie, apiKey)
+		if err := p.bookForDate(date, classSlots, preferences, cookie, apiKey); err != nil {
+			switch errorT := err.(type) {
+
+			case NoAvailableClassError:
+				p.logger.WithFields(logrus.Fields{
+					"date": date,
+				}).Info("no available classes")
+
+			case NoMatchingClassError:
+				p.logger.WithFields(logrus.Fields{
+					"preferredCenterSlots": errorT.otherAvailableSlots,
+				}).Error("failed to find a matching slot")
+			}
+
+		}
 	}
 }
 
-func (p Provider) bookForDate(date string, classSlots []cultClass, preferences []SlotPreference, cookie, apiKey string) {
+func (p Provider) bookForDate(date string, classSlots []cultClass, preferences []SlotPreference, cookie, apiKey string) error {
 	availableClassesForDay := make([]cultClass, 0)
 	for _, class := range classSlots {
 		if class.Date == date && (class.State == "AVAILABLE" || class.State == "BOOKED") {
 			availableClassesForDay = append(availableClassesForDay, class)
+			// RETURN early if class already booked
 			if class.State == "BOOKED" {
 				p.logger.WithFields(logrus.Fields{
 					"date":  date,
 					"class": class,
 				}).Info("class already booked")
-				// class is already booked our work here is done!
-				return
+				return nil
 			}
 		}
 	}
 
 	if len(availableClassesForDay) == 0 {
-		p.logger.WithFields(logrus.Fields{
-			"date": date,
-		}).Info("no available classes")
-		return
+		return NoAvailableClassError{date}
 	}
 
+	// TODO: log state of each preference
+
+	foundPreferredSlot := false
 	// if the execution comes here, it means we haven't booked a class for this day
 	for _, pref := range preferences {
 		for _, class := range availableClassesForDay {
 			if pref.CenterID == class.CenterID && pref.Time == class.StartTime && pref.WorkoutName == class.WorkoutName {
+				foundPreferredSlot = true
 				bookingResult := <-p.BookClass(class, cookie, apiKey)
 				if bookingResult.Booked {
 					p.logger.WithFields(logrus.Fields{
@@ -56,7 +71,7 @@ func (p Provider) bookForDate(date string, classSlots []cultClass, preferences [
 						"class": class,
 					}).Info("successfully booked a class")
 					// class booked, let's not go over other preferences
-					return
+					return nil
 				}
 
 				if bookingResult.Err != nil {
@@ -70,6 +85,25 @@ func (p Provider) bookForDate(date string, classSlots []cultClass, preferences [
 			}
 		}
 	}
+
+	if !foundPreferredSlot {
+		// stores <centerID, slot time>
+		preferredCenterSlots := make(map[int][]string)
+		for _, pref := range preferences {
+			for _, class := range availableClassesForDay {
+				if pref.CenterID == class.CenterID && pref.WorkoutName == class.WorkoutName {
+					if slots, ok := preferredCenterSlots[pref.CenterID]; ok {
+						slots = append(slots, class.StartTime)
+						continue
+					}
+					preferredCenterSlots[pref.CenterID] = []string{class.StartTime}
+				}
+			}
+		}
+		return NoMatchingClassError{preferredCenterSlots}
+	}
+
+	return nil
 }
 
 func (p Provider) getClassSlots(centerIDs []int, cookie, apiKey string) []cultClass {
