@@ -32,7 +32,7 @@ functions:
       CULT_COOKIE: ${ssm:/cult-crons/${self:provider.stage}/CULT_COOKIE}
     events:
       - schedule:
-          name: cult-class-booker-${self:provider.stage}
+          name: cult-class-booker-10PM-${self:provider.stage}
           description: A cron that books my cult classes (stage ${self:provider.stage})
-          rate: cron(30 16 * * ? *) # this equals to 10:01PM IST
+          rate: cron(30 16 * * ? *) # this equals to 10:00PM IST
           enabled: true
