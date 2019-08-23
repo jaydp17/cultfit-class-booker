@@ -27,6 +27,11 @@ func Handler() {
 			WorkoutName: "LEARN TO SWIM",
 		},
 		{
+			CenterID:    swimmingKoramangalaCenterID,
+			Time:        "18:00:00", // 6pm
+			WorkoutName: "LEARN TO SWIM",
+		},
+		{
 			CenterID:    swimmingHSRCenterID,
 			Time:        "17:00:00", // 5pm
 			WorkoutName: "LEARN TO SWIM",
